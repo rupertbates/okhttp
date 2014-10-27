@@ -311,7 +311,12 @@ public final class DiskLruCache implements Closeable {
       entry.currentEditor = new Editor(entry);
     } else if (secondSpace == -1 && firstSpace == READ.length() && line.startsWith(READ)) {
       // This work was already done by calling lruEntries.get().
-    } else {
+    } else if(line.startsWith(READ)) {
+      //Work around a problem where the journal gets corrupted with a READ with 2 keys
+      //eg. READ 96644ef5b41c75bd081e1737bREAD e9211ead93e7e0c88e4f79b0d5af4a45
+      //In this case we just want to throw away the corrupted line, not delete the entire cache
+      lruEntries.remove(key);
+    } else{
       throw new IOException("unexpected journal line: " + line);
     }
   }
